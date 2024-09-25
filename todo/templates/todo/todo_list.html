@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">Todo List</h1>
+        <form id="todoForm" class="mb-6">
+            {% csrf_token %}
+            <div class="flex">
+                <input type="text" name="title" id="todoTitle" class="flex-grow p-2 border rounded" placeholder="Enter a new todo">
+                <button type="submit" class="ml-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Add</button>
+            </div>
+        </form>
+        <ul id="todoList">
+            {% for todo in todos %}
+                <li class="bg-white shadow-md rounded-lg p-4 mb-4 flex items-center justify-between" data-id="{{ todo.id }}">
+                    <span class="{% if todo.completed %}line-through text-gray-500{% endif %}">{{ todo.title }}</span>
+                    <div>
+                        <button onclick="toggleTodo({{ todo.id }})" class="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                            {% if todo.completed %}Undo{% else %}Complete{% endif %}
+                        </button>
+                        <button onclick="deleteTodo({{ todo.id }})" class="text-sm bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        document.getElementById('todoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('todoTitle').value;
+            fetch('{% url "add_todo" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({title: title})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const todoList = document.getElementById('todoList');
+                    todoList.insertAdjacentHTML('afterbegin', `
+                        <li class="bg-white shadow-md rounded-lg p-4 mb-4 flex items-center justify-between" data-id="${data.todo.id}">
+                            <span>${data.todo.title}</span>
+                            <div>
+                                <button onclick="toggleTodo(${data.todo.id})" class="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">Complete</button>
+                                <button onclick="deleteTodo(${data.todo.id})" class="text-sm bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>
+                            </div>
+                        </li>
+                    `);
+                    document.getElementById('todoTitle').value = '';
+                }
+            });
+        });
+
+        function toggleTodo(id) {
+            fetch(`{% url 'toggle_todo' 0 %}`.replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const todoItem = document.querySelector(`li[data-id="${id}"]`);
+                    const todoText = todoItem.querySelector('span');
+                    const toggleButton = todoItem.querySelector('button');
+                    if (data.completed) {
+                        todoText.classList.add('line-through', 'text-gray-500');
+                        toggleButton.textContent = 'Undo';
+                    } else {
+                        todoText.classList.remove('line-through', 'text-gray-500');
+                        toggleButton.textContent = 'Complete';
+                    }
+                }
+            });
+        }
+
+        function deleteTodo(id) {
+            fetch(`{% url 'delete_todo' 0 %}`.replace('0', id), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const todoItem = document.querySelector(`li[data-id="${id}"]`);
+                    todoItem.remove();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

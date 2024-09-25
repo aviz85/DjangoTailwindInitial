@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tailwind',
     'theme',
-]
+    'todo',]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
