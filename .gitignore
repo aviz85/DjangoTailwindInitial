@@ -1,0 +1,35 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Tailwind
+node_modules/
+/static/css/dist/
+
+# Python
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+*.venv
+env/
+*.env
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+.replit
